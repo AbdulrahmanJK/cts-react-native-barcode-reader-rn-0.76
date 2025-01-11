@@ -1,6 +1,14 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <uses-permission android:name="android.permission.BROADCAST_PACKAGE_REMOVED" />
 
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="com.barcodereader">
-
+  <application>
+    <receiver
+      android:name=".BarcodeBroadcastReceiver"
+      android:enabled="true"
+      android:exported="true">
+      <intent-filter>
+        <action android:name="android.intent.ACTION_DECODE_DATA" />
+      </intent-filter>
+    </receiver>
+  </application>
 </manifest>
-  

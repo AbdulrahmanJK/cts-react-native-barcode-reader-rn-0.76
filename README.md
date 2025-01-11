@@ -1,68 +1,157 @@
-# cts-react-native-barkod-reader
-CTS barkod reader for Unitech - EA600
+# cts-react-native-barcode-reader-rn-0.76
+CTS barcode reader for Unitech - EA600 (React Native 0.76+ compatible)
 
-## Getting started
+## Description
+This library provides barcode scanning functionality for Unitech EA600 devices in React Native applications. It handles the barcode scanning broadcasts and provides an easy-to-use interface for React Native apps.
 
-`$ npm install git+https://github.com/cts-yazilim/cts-react-native-barcode-reader --save`
+## Requirements
+- React Native >= 0.76.0
+- Android SDK >= 24 (Android 7.0)
+- Unitech EA600 device
 
-### Mostly automatic installation
+## Installation
 
-`$ react-native link cts-react-native-barcode-reader`
+```bash
+npm install git+https://github.com/AbdulrahmanJK/cts-react-native-barcode-reader-rn-0.76.git --save
+```
 
-### Manual installation
+## Setup
 
+### Android
 
-#### Android
+1. Add the following to your `android/settings.gradle`:
+```gradle
+include ':cts-react-native-barcode-reader-rn-0.76'
+project(':cts-react-native-barcode-reader-rn-0.76').projectDir = new File(rootProject.projectDir, '../node_modules/cts-react-native-barcode-reader-rn-0.76/android')
+```
 
-1. Open up `android/app/src/main/java/[...]/MainActivity.java`
-  - Add `import com.barcodereader.RNAndroidBarcodeBroadcastPackage;` to the imports at the top of the file
-  - Add `new RNAndroidBarcodeBroadcastPackage()` to the list returned by the `getPackages()` method
-2. Append the following lines to `android/settings.gradle`:
-  	```
-  	include ':cts-react-native-barcode-reader'
-  	project(':cts-react-native-barcode-reader').projectDir = new File(rootProject.projectDir, 	'../node_modules/cts-react-native-barcode-reader/android')
-  	```
-3. Insert the following lines inside the dependencies block in `android/app/build.gradle`:
-  	```
-      compile project(':cts-react-native-barcode-reader')
-  	```
-4. Insert the following lines inside the AndroidManifest.xml in `android/app/src/main/AndroidManifest.xml`:
-  	```
-	  <manifest ....>
-	  		.....
-			<application ...>
-					.....
-			        <receiver
-						android:name="com.barcodereader.BarcodeBroadcastReceiver"
-						android:enabled="true"
-						android:exported="true">
-						<intent-filter>
-							<action android:name="android.intent.ACTION_DECODE_DATA"/>
-						</intent-filter>
-        			</receiver>
-   			</application>
-      </manifest>
-  	```
+2. Update your `android/app/build.gradle`:
+```gradle
+dependencies {
+    // ... other dependencies
+    implementation project(':cts-react-native-barcode-reader-rn-0.76')
+}
+```
+
+3. Update your `android/app/src/main/AndroidManifest.xml`:
+```xml
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <!-- Add this receiver inside the application tag -->
+        <receiver
+            android:name="com.barcodereader.BarcodeBroadcastReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.ACTION_DECODE_DATA"/>
+            </intent-filter>
+        </receiver>
+    </application>
+</manifest>
+```
+
+4. Add the package to your `MainApplication.kt`:
+```kotlin
+// android/app/src/main/java/com/your-app-name/MainApplication.kt
+
+import com.barcodereader.RNAndroidBarcodeBroadcastPackage // Add this import
+
+class MainApplication : Application(), ReactApplication {
+    override val reactNativeHost: ReactNativeHost =
+        object : DefaultReactNativeHost(this) {
+            override fun getPackages(): List<ReactPackage> =
+                PackageList(this).packages.apply {
+                    // Add the package to the list
+                    add(RNAndroidBarcodeBroadcastPackage())
+                }
+            
+            // ... rest of your MainApplication code ...
+        }
+    
+    // ... rest of your MainApplication code ...
+}
+```
 
 ## Usage
+
+### Basic Usage
 ```javascript
-import { DeviceEventEmitter } from "react-native";
+import { useEffect } from 'react';
+import { DeviceEventEmitter } from 'react-native';
 
-//Add it in componentWillMount or somewhere where it will get executed at the start of app 
-DeviceEventEmitter.addListener('BarcodeScanerReceiver', function (map) {
-    console.log('BarcodeScanerReceiver: ' + map.barcode_data);
-});
+function YourComponent() {
+    useEffect(() => {
+        // Add barcode scanner listener
+        const barcodeListener = DeviceEventEmitter.addListener(
+            'BarcodeScanerReceiver',
+            (data) => {
+                console.log('Scanned barcode:', data.barcode_data);
+                // Handle the barcode data here
+            }
+        );
 
-//Do not forget to remove the listener at componentWillUnmount 
-componentWillUnmount() {
-    DeviceEventEmitter.removeListener('BarcodeScanerReceiver'); 
-  }
+        // Cleanup listener on component unmount
+        return () => {
+            barcodeListener.remove();
+        };
+    }, []);
 
-//You can also get the referrer which is stored in the local variable by
-import RNAndroidBarcodeBroadcast from 'cts-react-native-barcode-reader'; 
-
-//This will return the referrer value if we have got it other will return "NOT AVAILABLE"
-let referrerValue = await RNAndroidBarcodeBroadcast.getReferrerData();
-
+    return (
+        // Your component JSX
+    );
+}
 ```
-  
+
+### Class Component Usage
+```javascript
+import React, { Component } from 'react';
+import { DeviceEventEmitter } from 'react-native';
+
+class YourComponent extends Component {
+    componentDidMount() {
+        this.barcodeListener = DeviceEventEmitter.addListener(
+            'BarcodeScanerReceiver',
+            this.handleBarcode
+        );
+    }
+
+    componentWillUnmount() {
+        if (this.barcodeListener) {
+            this.barcodeListener.remove();
+        }
+    }
+
+    handleBarcode = (data) => {
+        console.log('Scanned barcode:', data.barcode_data);
+        // Handle the barcode data here
+    }
+
+    render() {
+        return (
+            // Your component JSX
+        );
+    }
+}
+```
+
+## Troubleshooting
+
+### Common Issues
+
+1. Barcode scanner not working
+   - Make sure your device is Unitech EA600
+   - Verify that the receiver is properly registered in AndroidManifest.xml
+   - Check Android logs for any error messages
+
+2. Build errors
+   - Ensure your React Native version is 0.76.0 or higher
+   - Make sure all the gradle configurations are correct
+   - Try cleaning and rebuilding your project
+
+### Debug Logs
+The library includes debug logs that can help identify issues. Check your Android logs for entries with tag "ReactNativeJS".
+
+## License
+MIT
+
+## Contributing
+Feel free to submit issues and pull requests to improve the library.
